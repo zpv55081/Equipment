@@ -1,0 +1,44 @@
+version: '3'
+services:
+  ngi:
+    image: nginx:latest
+    ports:
+      - "700:80"
+    volumes:
+      - ./webser:/etc/nginx/conf.d
+      - ./lararoot:/var/www
+      - ./journal/wserv:/var/log/nginx
+    links:
+      - piha
+      - nodejs
+  piha:
+    build: ./constr/hyprep
+    extra_hosts:
+      host.docker.internal: host-gateway
+    ports:
+      - "7000:8000"
+    volumes:
+      - ./lararoot:/var/www
+      - ./journal/xdeb:/var/logs/xdebug
+    links:
+      - mys
+  mys:
+    image: mysql:8.0.33
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: equip
+      MYSQL_USER: app
+      MYSQL_PASSWORD: demo
+    volumes:
+      - ./databa:/var/lib/mysql
+    ports:
+      - "33060:3306"
+  nodejs:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./vjsroot:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    command: sh -c "npm install && npm run serve"
