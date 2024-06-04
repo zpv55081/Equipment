@@ -17,25 +17,26 @@ class StoreEquipmentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'equipments' => 'required|array',
             /**
              * Поле `equipment_type_id` обязательно для заполнения и должно существовать в таблице `equipment_types` в колонке `id`.
              * Это гарантирует, что тип оборудования, который мы пытаемся присвоить новому оборудованию, уже существует в базе данных.
              */
-            'equipment_type_id' => 'required|exists:equipment_types,id',
+            'equipments.*.equipment_type_id' => 'required|exists:equipment_types,id',
 
             /**
              * Поле `serial_number` обязательно для заполнения и должно быть строкой.
              * Оно также не должно превышать 255 символов, чтобы избежать проблем с хранением в базе данных.
              * Серийный номер необходим для уникальной идентификации каждого оборудования.
              */
-            'serial_number' => 'required|string|max:255',
+            'equipments.*.serial_number' => 'required|string|max:255',
 
             /**
              * Поле `desc` является необязательным и должно быть строкой, если оно присутствует.
              * Это поле позволяет добавить дополнительное описание оборудования.
              * Максимальная длина описания ограничена 1000 символами для обеспечения целостности данных.
              */
-            'desc' => 'nullable|string|max:1000',
+            'equipments.*.desc' => 'nullable|string|max:1000',
         ];
     }
 }

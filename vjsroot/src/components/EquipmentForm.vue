@@ -13,12 +13,18 @@
       <div>
         <label for="serialNumber">Серийные номера:</label>
         <textarea v-model="form.serial_number" id="serialNumber" required></textarea>
+        <small>Введите серийные номера через запятую</small>
       </div>
       <div>
         <label for="desc">Примечание:</label>
         <textarea v-model="form.desc" id="desc"></textarea>
       </div>
       <button type="submit">Добавить</button>
+      <div v-if="messages.length" class="messages">
+        <div v-for="(message, index) in messages" :key="index" class="message">
+          {{ message }}
+        </div>
+      </div>
     </form>
   </div>
 </template>
@@ -34,7 +40,8 @@ export default {
         serial_number: '',
         desc: ''
       },
-      equipmentTypes: []
+      equipmentTypes: [],
+      messages: []
     };
   },
   created() {
@@ -50,15 +57,31 @@ export default {
       }
     },
     async handleSubmit() {
+      this.messages = [];
+      const serialNumbers = this.form.serial_number.split(',').map(sn => sn.trim());
+      const equipments = serialNumbers.map(sn => ({
+        equipment_type_id: this.form.equipment_type_id,
+        serial_number: sn,
+        desc: this.form.desc
+      }));
+
       try {
-        await axios.post('http://localhost:700/api/equipment', this.form);
-        alert('Оборудование успешно добавлено!');
-        this.form = {
-          equipment_type_id: '',
-          serial_number: '',
-          desc: ''
-        };
+        const response = await axios.post('http://localhost:700/api/equipment', { equipments });
+        response.data.results.forEach(result => {
+          this.messages.push(result.message);
+        });
+
+        if (response.data.results.every(result => result.success)) {
+          alert('Все оборудования успешно добавлены!');
+          this.form = {
+            equipment_type_id: '',
+            serial_number: '',
+            desc: ''
+          };
+        }
+
       } catch (error) {
+        this.messages.push('Ошибка при добавлении оборудования');
         console.error('Ошибка при добавлении оборудования:', error);
       }
     }

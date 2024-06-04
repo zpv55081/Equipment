@@ -12,7 +12,7 @@
       <div v-for="equipment in equipments" :key="equipment.id">
         <div>
           <label>Тип оборудования:</label>
-          <input type="text" :value="equipment.equipment_type_name || 'Неизвестно'" disabled>
+          <input type="text" :value="equipment.equipment_type_name" disabled>
         </div>
         <div>
           <label>Серийный номер:</label>
@@ -57,7 +57,7 @@ export default {
         this.equipments = response.data.data.map(equipment => ({
           ...equipment,
           isEditing: false,
-          equipment_type_name: this.getEquipmentTypeName(equipment.equipment_type)
+          equipment_type_name: equipment.equipment_type_name || 'Неизвестно'
         }));
       } catch (error) {
         console.error('Ошибка при поиске оборудования:', error);
@@ -91,10 +91,6 @@ export default {
       } catch (error) {
         console.error('Ошибка при загрузке типов оборудования:', error);
       }
-    },
-    getEquipmentTypeName(typeId) {
-      const type = this.equipmentTypes.find(t => t.id === typeId);
-      return type ? type.name : 'Неизвестно';
     }
   },
   async mounted() {

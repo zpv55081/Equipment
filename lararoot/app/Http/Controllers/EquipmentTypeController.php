@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ListEquipmentTypeRequest;
 use App\Http\Resources\EquipmentTypeResource;
 use App\Models\EquipmentType;
 use Illuminate\Http\Request;
@@ -14,15 +15,20 @@ class EquipmentTypeController extends Controller
     /**
      * Получить список типов оборудования.
      *
-     * @param Request $request Запрос с параметрами фильтрации.
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection Коллекция ресурсов типов оборудования.
+     * @param ListEquipmentTypeRequest $request Запрос для получения списка типов оборудования
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection Коллекция ресурсов типов оборудования
      */
-    public function index(Request $request)
+    public function index(ListEquipmentTypeRequest $request)
     {
         $query = EquipmentType::query();
 
         if ($request->has('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%');
+            $query->where('name', 'like', '%' . $request->q . '%')
+                  ->orWhere('mask', 'like', '%' . $request->q . '%');
+        } elseif ($request->has('mask')) {
+            $query->where('mask', 'like', '%' . $request->mask . '%');
+        } elseif ($request->has('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
         }
 
         $equipmentTypes = $query->paginate();
@@ -32,12 +38,11 @@ class EquipmentTypeController extends Controller
     /**
      * Показать информацию о конкретном типе оборудования.
      *
-     * @param int $id Идентификатор типа оборудования.
-     * @return EquipmentTypeResource Ресурс типа оборудования.
+     * @param EquipmentType $equipmentType Модель типа оборудования
+     * @return EquipmentTypeResource Ресурс типа оборудования
      */
-    public function show($id)
+    public function show(EquipmentType $equipmentType)
     {
-        $equipmentType = EquipmentType::findOrFail($id);
         return new EquipmentTypeResource($equipmentType);
     }
 
@@ -61,14 +66,12 @@ class EquipmentTypeController extends Controller
     /**
      * Обновить информацию о конкретном типе оборудования.
      *
-     * @param Request $request Запрос с данными для обновления типа оборудования.
-     * @param int $id Идентификатор типа оборудования.
-     * @return EquipmentTypeResource Обновленный ресурс типа оборудования.
+     * @param Request $request Запрос на обновление типа оборудования
+     * @param EquipmentType $equipmentType Модель типа оборудования
+     * @return EquipmentTypeResource Ресурс обновлённого типа оборудования
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, EquipmentType $equipmentType)
     {
-        $equipmentType = EquipmentType::findOrFail($id);
-        
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'mask' => 'sometimes|required|string|max:255',
@@ -81,14 +84,12 @@ class EquipmentTypeController extends Controller
     /**
      * Удалить конкретный тип оборудования.
      *
-     * @param int $id Идентификатор типа оборудования.
+     * @param EquipmentType $equipmentType Модель типа оборудования
      * @return \Illuminate\Http\Response Ответ без содержания.
      */
-    public function destroy($id)
+    public function destroy(EquipmentType $equipmentType)
     {
-        $equipmentType = EquipmentType::findOrFail($id);
         $equipmentType->delete();
-
         return response()->noContent();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ListEquipmentRequest;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Http\Resources\EquipmentResource;
@@ -33,78 +34,61 @@ class EquipmentController extends Controller
 
     /**
      * Получить список оборудования.
-     *
-     * @param Request $request Запрос с параметрами фильтрации.
+     * 
+     * @param ListEquipmentRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection Коллекция ресурсов оборудования.
      */
-    public function index(Request $request)
+    public function index(ListEquipmentRequest $request)
     {
         $query = Equipment::query();
 
         if ($request->has('q')) {
             $query->where('serial_number', 'like', '%' . $request->q . '%')
                   ->orWhere('desc', 'like', '%' . $request->q . '%');
+        } elseif ($request->has('equipment_type_id')) {
+            $query->where('equipment_type_id', $request->equipment_type_id);
         }
 
-        $equipments = $query->paginate();
+        $equipments = $query->with('equipmentType')->paginate();
         return EquipmentResource::collection($equipments);
-    }
-
-    /**
-     * Показать информацию о конкретном оборудовании.
-     *
-     * @param int $id Идентификатор оборудования.
-     * @return EquipmentResource Ресурс оборудования.
-     */
-    public function show($id)
-    {
-        $equipment = Equipment::findOrFail($id);
-        return new EquipmentResource($equipment);
     }
 
     /**
      * Создать новое оборудование.
      *
      * @param StoreEquipmentRequest $request Запрос с данными для создания оборудования.
-     * @return EquipmentResource Созданный ресурс оборудования.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreEquipmentRequest $request)
     {
         $data = $request->validated();
-
-        $equipment = $this->equipmentService->create($data);
-
-        return new EquipmentResource($equipment);
+        $results = $this->equipmentService->create($data['equipments']);
+        return response()->json(['results' => $results], 200);
     }
 
     /**
      * Обновить информацию о конкретном оборудовании.
      *
      * @param UpdateEquipmentRequest $request Запрос с данными для обновления оборудования.
-     * @param int $id Идентификатор оборудования.
-     * @return EquipmentResource Обновленный ресурс оборудования.
+     * @param Equipment $equipment
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(UpdateEquipmentRequest $request, $id)
+    public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
-        $equipment = Equipment::findOrFail($id);
         $data = $request->validated();
-
         $updatedEquipment = $this->equipmentService->update($equipment, $data);
-
-        return new EquipmentResource($updatedEquipment);
+        return response()->json($updatedEquipment);
     }
 
     /**
      * Удалить конкретное оборудование.
-     *
-     * @param int $id Идентификатор оборудования.
-     * @return \Illuminate\Http\Response Ответ без содержания.
+     * 
+     * @param Equipment $equipment
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy(Equipment $equipment)
     {
-        $equipment = Equipment::findOrFail($id);
         $equipment->delete();
-
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 }

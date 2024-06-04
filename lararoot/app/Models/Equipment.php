@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Модель для таблицы equipment.
+ * Модель для таблицы equipments.
  *
  * @property int $id
  * @property int $equipment_type_id
@@ -18,7 +18,7 @@ class Equipment extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'equipments';
+    // protected $table = 'equipments';
 
     /**
      * Атрибуты, которые можно массово присваивать.
